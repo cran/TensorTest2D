@@ -1,0 +1,8 @@
+615bc2d72205fb3bc0965db6174ec555 *DESCRIPTION
+6ae74133edd14e630391c1fadbf61824 *NAMESPACE
+dc7a40c02d0519b7a515c39db7226d1b *R/TRtest.omics.R
+2dc53b30c88ac3af683c66157a1f1c8a *R/TensorTest2D.R
+8be4bf19bd1885bb0536446feadf427f *R/summary.tsglm.R
+85fc4bcafd2c38a4b6fe9afe723d6065 *man/TRtest.omics.Rd
+18522c78c3cd12c9b98d52ab411280fe *man/TensorTest2D.Rd
+b4d05e8e3e90be8fbdd992a859f8f88a *man/summary.tsglm.Rd
