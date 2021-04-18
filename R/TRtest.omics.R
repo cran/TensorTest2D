@@ -53,7 +53,7 @@
 #'
 #' @param y A numerical vector. Dependent variable.
 #' @param X A numerical 3-D arrary. Independent variable(3-D tensor).
-#' @param W A numerical vector. Independent variable.
+#' @param W A numerical matrix. Independent variable.
 #' @param n_R A numerical constant. A predefined value determines the rank of
 #'   the approximate matrix
 #' @param family Family of \kbd{generalized linear model}. Provide three options for model.(see more details in
@@ -78,13 +78,13 @@
 #'   \kbd{b_EST}: The estimated coefficients for numerical variables.
 #'
 #'   \kbd{b_SD}: The estimated standard deviation for numerical variables.
-#'
+#'  
 #'   \kbd{b_PV}: The p-value for numerical variables.
 #'
 #'   \kbd{B_EST}: The estimated coefficients for 3-D tensor variables.
 #'
 #'   \kbd{B_SD}: The estimated standard deviation for 3-D tensor variables.
-#'
+#'   
 #'   \kbd{B_PV}: The p-value for 3-D tensor variables.
 #'
 #'   \kbd{Residuals}: The differences between true values and prediction values. Provide for
@@ -135,18 +135,21 @@
 #' opt = 1, max_ite = 100, tol = 10^(-7) )
 #' ## Visualization
 #' image(B_True);image(result_R$B_EST)
+#' head(predict(result_R, DATA_R$X))
 #'
 #' ## Binomial
 #' result_B <- TRtest.omics(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
 #' opt = 1, max_ite = 100, tol = 10^(-7) )
 #' ## Visualization
 #' image(B_True);image(result_B$B_EST)
+#' head(predict(result_B, DATA_B$X))
 #'
 #' ## Poisson
 #' result_P <- TRtest.omics(y = DATA_P$y, X = DATA_P$X, W=NULL, n_R = 1, family = "poisson",
 #' opt = 1, max_ite = 100, tol = 10^(-7) )
 #' ## Visualization
 #' image(B_True);image(result_P$B_EST)
+#' head(predict(result_P, DATA_P$X))
 #'
 #' @references
 #'   Mengyun Wu, Jian Huang, and Shuangge Ma (2017). Identifying gene-gene
@@ -155,303 +158,319 @@
 #' @author Sheng-Mao Chang
 #'
 #' @export
-TRtest.omics <- function(y, X, W = NULL, n_R, family, opt = 1, max_ite = 100, tol = 10^(-7) ){
-  Default_family <- c("gaussian", "binomial", "poisson") #* (revisable for additional family)
-
-  # Check and Tidy input function
-  Check_tidy_input <- function(y, X, W, family){
-    # Check family name
-    if( !(family %in% Default_family) ){
+TRtest.omics <- function (y, X, W = NULL, n_R, family, opt = 1, max_ite = 100, 
+                          tol = 10^(-7)) 
+{
+  Default_family <- c("gaussian", "binomial", "poisson")
+  Check_tidy_input <- function(y, X, W, family) {
+    if (!(family %in% Default_family)) {
       stop("Mismatch with default family!")
-    }else{
-      # Check data type consistency
-      if(! is.vector(y)){
+    }
+    else {
+      if (!is.vector(y)) {
         stop("The response variable y is not a vector!\n")
       }
       n <- length(y)
-      ##* Check y by family (revisable for additional family)
-      if(family == "binomial"){
-        if( sum( !(y %in% c(0,1)) ) != 0){
+      if (family == "binomial") {
+        if (sum(!(y %in% c(0, 1))) != 0) {
           stop("The response variable y is not a binary variable!\n")
         }
       }
-      if(family == "poisson"){
-        if( !all(y >= 0) ){
+      if (family == "poisson") {
+        if (!all(y >= 0)) {
           stop("The response variable y is not positive!\n")
         }
-        if( ! all( ( y - round(y) ) == 0) ){
+        if (!all((y - round(y)) == 0)) {
           stop("The response variable y is not a integer variable!\n")
         }
       }
-      if(length(dim(X)) != 3){
+      if (length(dim(X)) != 3) {
         stop("The matrix independent variable X is not a 3-D array!\n")
       }
-      ## Check X
       n_vec <- dim(X)
-      if(n_vec[3] != n){
+      if (n_vec[3] != n) {
         stop("y and X are not conformable!\n")
       }
-      ## Check W
-      if(is.null(W)){
+      if (is.null(W)) {
         fm <- "y ~ I + X"
         W <- matrix(1, n, 1)
-      }else{
-        if(all(W == 1)){
+      }
+      else {
+        if (all(W == 1)) {
           fm <- "y ~ I + X"
-        }else{
+        }
+        else {
           fm <- "y ~ W + X"
         }
       }
-      if(length(dim(W)) != 2){
+      if (length(dim(W)) != 2) {
         stop("W has wrong dimension!\n")
       }
-      if(nrow(W) != n){
+      if (nrow(W) != n) {
         stop("y and W are not conformable!\n")
       }
-      ## Check n_R
-      if(n_R > min(n_vec[1:2]) ){
+      if (n_R > min(n_vec[1:2])) {
         stop("n_R must be less or equal than min(dim(X_matrix))! \n")
       }
     }
-    return(list(DATA = list(y = y, X = X, W = W), fm = fm) )
+    return(list(DATA = list(y = y, X = X, W = W), fm = fm))
   }
-  # Variance function
-  VAR_ALS <- function(DATA, n_R, B1, B2, beta, family){
-    # Predefined-function
-    `%b%` <- function(A, B){
-      n_A <- ncol(A); n_B <- ncol(B)
-      O <- matrix(0, nrow(A)*nrow(B), n_A*n_B)
-      for(i in 1:n_B) for(j in 1:n_A) O[, (i-1)*n_A + j] <- A[,j]%x%B[,i]
+  VAR_ALS <- function(DATA, n_R, B1, B2, beta, family) {
+    `%b%` <- function(A, B) {
+      n_A <- ncol(A)
+      n_B <- ncol(B)
+      O <- matrix(0, nrow(A) * nrow(B), n_A * n_B)
+      for (i in 1:n_B) for (j in 1:n_A) O[, (i - 1) * n_A + 
+                                            j] <- A[, j] %x% B[, i]
       return(O)
     }
-    `%i%` <- function(X, B) sapply(1:dim(X)[3], function(i) sum(X[,,i]*B))
-    # Data
-    y <- DATA$y; X <- DATA$X; W <- DATA$W
-    n_vec <- dim(X); n <- n_vec[3]; n_P <- n_vec[1]
-    n_G <- n_vec[2]; n_d <- ncol(W)
-    B <- B1%*%t(B2); C <- matrix(B1[-(1:n_R),], n_P-n_R, n_R)
-    H <- matrix(B1[1:n_R, 1:n_R], n_R, n_R) # the F in the manuscript
-    df <- (n_P - n_R + n_G)*n_R + n_d
-    w_seq <- X%i%B + W%*%beta
+    `%i%` <- function(X, B) sapply(1:dim(X)[3], function(i) sum(X[, 
+                                                                  , i] * B))
+    y <- DATA$y
+    X <- DATA$X
+    W <- DATA$W
+    n_vec <- dim(X)
+    n <- n_vec[3]
+    n_P <- n_vec[1]
+    n_G <- n_vec[2]
+    n_d <- ncol(W)
+    B <- B1 %*% t(B2)
+    C <- matrix(B1[-(1:n_R), ], n_P - n_R, n_R)
+    H <- matrix(B1[1:n_R, 1:n_R], n_R, n_R)
+    df <- (n_P - n_R + n_G) * n_R + n_d
+    w_seq <- X %i% B + W %*% beta
     res <- y - w_seq
-    #* Family (revisable for additional family)
-    if(family == "gaussian") var_vec <- rep((n-df)/sum(res^2), n)
-    if(family == "binomial"){
-      var_vec <- exp(w_seq); var_vec <- var_vec / (1 + var_vec)
+    if (family == "gaussian") 
+      var_vec <- rep((n - df)/sum(res^2), n)
+    if (family == "binomial") {
+      var_vec <- exp(w_seq)
+      var_vec <- var_vec/(1 + var_vec)
       var_vec <- var_vec * (1 - var_vec)
     }
-    if(family == "poisson") var_vec <- exp(w_seq)
-
-    # Fisher information
+    if (family == "poisson") 
+      var_vec <- exp(w_seq)
     I <- matrix(0, df, df)
-    for(i in 1:n){
-      tKi2 <- t(diag(n_R) %x% matrix(X[(n_R+1):n_P,,i], n_P-n_R, n_G))
-      tKi1 <- t(diag(n_R) %x% matrix(X[1:n_R,,i], n_R, n_G))
-      V <- c(W[i,], t(tKi2)%*%matrix(c(B2), n_G*n_R, 1),
-             tKi2%*%matrix(c(C), (n_P-n_R)*n_R, 1) +
-               tKi1%*%matrix(c(H), n_R*n_R, 1))
-      I <- I + V%*%t(V)*var_vec[i]
+    for (i in 1:n) {
+      tKi2 <- t(diag(n_R) %x% matrix(X[(n_R + 1):n_P, , 
+                                       i], n_P - n_R, n_G))
+      tKi1 <- t(diag(n_R) %x% matrix(X[1:n_R, , i], n_R, 
+                                     n_G))
+      V <- c(W[i, ], t(tKi2) %*% matrix(c(B2), n_G * n_R, 
+                                        1), tKi2 %*% matrix(c(C), (n_P - n_R) * n_R, 
+                                                            1) + tKi1 %*% matrix(c(H), n_R * n_R, 1))
+      I <- I + V %*% t(V) * var_vec[i]
     }
-    Iinv <- try(solve(I),TRUE)
+    Iinv <- try(solve(I), TRUE)
     V_beta <- as.matrix(Iinv[1:n_d, 1:n_d])
     Iinv <- Iinv[-c(1:n_d), -c(1:n_d)]
-    # Variance Matrix
-    if(! is.null(attr(Iinv, "class"))){
+    if (!is.null(attr(Iinv, "class"))) {
       df <- prod(dim(B))
       V_B <- matrix(NA, df, df)
-    }else{
-      A1 <- cbind(matrix(0, n_G*n_R, (n_P-n_R)*n_R), diag(n_G*n_R))
-      A2 <- cbind(diag(n_P-n_R)%b%B2, C%x%diag(n_G))
-      A3 <- C%x%diag(n_G)
-      A4 <- H%x%diag(n_G)
-
-      Vff <- A1%*%Iinv%*%t(A1)
-      V11 <- A4%*%Vff%*%t(A4)
-      V12 <- A4%*%Vff%*%t(A3)
-      V22 <- A2%*%Iinv%*%t(A2)
+    }
+    else {
+      A1 <- cbind(matrix(0, n_G * n_R, (n_P - n_R) * n_R), 
+                  diag(n_G * n_R))
+      A2 <- cbind(diag(n_P - n_R) %b% B2, C %x% diag(n_G))
+      A3 <- C %x% diag(n_G)
+      A4 <- H %x% diag(n_G)
+      Vff <- A1 %*% Iinv %*% t(A1)
+      V11 <- A4 %*% Vff %*% t(A4)
+      V12 <- A4 %*% Vff %*% t(A3)
+      V22 <- A2 %*% Iinv %*% t(A2)
       V_B <- rbind(cbind(V11, V12), cbind(t(V12), V22))
     }
-
-    return(list(V_B=V_B, V_b=V_beta))
+    return(list(V_B = V_B, V_b = V_beta))
   }
-  # IC and deviance function
-  Calculate_IC_Dev <- function(w_seq, df, family){
+  Calculate_IC_Dev <- function(w_seq, df, family) {
     n <- length(w_seq)
-    #* (revisable for additional family)
-    if(family == "gaussian"){
-      # Residuals
+    if (family == "gaussian") {
       res <- y - w_seq
-      s2_MLE <- mean(res*res)
-      # Information criterion
-      AIC <- n*log(s2_MLE) + 2*df; BIC <- n*log(s2_MLE) + log(n)*df
-      I_C <- c(AIC, BIC); names(I_C) <- c("AIC", "BIC")
-      # Degree of freedom
-      Dof <- c(n - 1, n - df); names(Dof) <- c("Null", "Model")
+      s2_MLE <- mean(res * res)
+      AIC <- n * log(s2_MLE) + 2 * df
+      BIC <- n * log(s2_MLE) + log(n) * df
+      I_C <- c(AIC, BIC)
+      names(I_C) <- c("AIC", "BIC")
+      Dof <- c(n - 1, n - df)
+      names(Dof) <- c("Null", "Model")
       return(list(IC = I_C, DoF = Dof, Residuals = res))
     }
-    if(family == "binomial"){
-      # Loglikihood
-      logLik_vec <- w_seq * y - log(1+exp(w_seq))
+    if (family == "binomial") {
+      logLik_vec <- w_seq * y - log(1 + exp(w_seq))
       logLik <- sum(logLik_vec)
-      # Information criterion
-      AIC <- -2*logLik + 2*df; BIC <- -2*logLik + log(n)*df
-      I_C <- c(AIC, BIC); names(I_C) <- c("AIC", "BIC")
-      # Deviance
-      Null_deviance <- deviance(glm(y ~ 1, family="binomial"))
+      AIC <- -2 * logLik + 2 * df
+      BIC <- -2 * logLik + log(n) * df
+      I_C <- c(AIC, BIC)
+      names(I_C) <- c("AIC", "BIC")
+      Null_deviance <- deviance(glm(y ~ 1, family = "binomial"))
       Residual_deviance <- -2 * logLik
-      sign <- y; sign[sign == 0] <- -1
+      sign <- y
+      sign[sign == 0] <- -1
       deviance_residual <- sign * sqrt(logLik_vec * -2)
-      Dev <- c(Null_deviance, Residual_deviance); names(Dev) <- c("Null_deviance", "Residual_deviance")
-      # Degree of freedom
-      Dof <- c(n - 1, n - df); names(Dof) <- c("Null", "Model")
-      return(list(IC = I_C, DoF = Dof, Dev_res = deviance_residual, Dev = Dev))
-      # Information criterion
+      Dev <- c(Null_deviance, Residual_deviance)
+      names(Dev) <- c("Null_deviance", "Residual_deviance")
+      Dof <- c(n - 1, n - df)
+      names(Dof) <- c("Null", "Model")
+      return(list(IC = I_C, DoF = Dof, Dev_res = deviance_residual, 
+                  Dev = Dev))
     }
-    if(family == "poisson"){
-      # Loglikihood
-      logLik_vec <- y*w_seq - exp(w_seq) - log(factorial(y))
+    if (family == "poisson") {
+      logLik_vec <- y * w_seq - exp(w_seq) - log(factorial(y))
       logLik <- sum(logLik_vec)
-      logLik_saturated_vec <- ifelse(y == 0, 0, y * log(y)) - y - log(factorial(y))
+      logLik_saturated_vec <- ifelse(y == 0, 0, y * log(y)) - 
+        y - log(factorial(y))
       logLik_saturated <- sum(logLik_saturated_vec)
-      # Information criterion
-      AIC <- -2*logLik + 2*df; BIC <- -2*logLik + log(n)*df
-      I_C <- c(AIC, BIC); names(I_C) <- c("AIC", "BIC")
-      # Deviance
-      Null_deviance <- deviance(glm(y ~ 1, family="poisson"))
-      Residual_deviance <- -2 * (logLik - logLik_saturated )
+      AIC <- -2 * logLik + 2 * df
+      BIC <- -2 * logLik + log(n) * df
+      I_C <- c(AIC, BIC)
+      names(I_C) <- c("AIC", "BIC")
+      Null_deviance <- deviance(glm(y ~ 1, family = "poisson"))
+      Residual_deviance <- -2 * (logLik - logLik_saturated)
       y_hat <- exp(w_seq)
       sign <- sign(y - y_hat)
-      deviance_residual <- sign * sqrt(-2 * (logLik_vec - logLik_saturated_vec) )
-      Dev <- c(Null_deviance, Residual_deviance); names(Dev) <- c("Null_deviance", "Residual_deviance")
-      # Degree of freedom
-      Dof <- c(n - 1, n - df); names(Dof) <- c("Null", "Model")
-      return(list(IC = I_C, DoF = Dof, Dev_res = deviance_residual, Dev = Dev))
+      deviance_residual <- sign * sqrt(-2 * (logLik_vec - 
+                                               logLik_saturated_vec))
+      Dev <- c(Null_deviance, Residual_deviance)
+      names(Dev) <- c("Null_deviance", "Residual_deviance")
+      Dof <- c(n - 1, n - df)
+      names(Dof) <- c("Null", "Model")
+      return(list(IC = I_C, DoF = Dof, Dev_res = deviance_residual, 
+                  Dev = Dev))
     }
   }
-  # Alternating Least-Square
-  ALS <- function(DATA, n_R, family, opt = opt, max_ite = max_ite, tol= tol){
-    #* Pre-defined function (revisable for additional family)
-    `%L%` <- function(X, y) solve(t(X)%*%X, t(X)%*%(y - offset_vec))
-    `%b%` <- function(X, y) as.vector(coefficients(glm(y ~ -1 + X, offset=offset_vec, family="binomial")))
-    `%p%` <- function(X, y) as.vector(coefficients(glm(y ~ -1 + X, offset=offset_vec, family="poisson")))
-    `%w%` <- function(X, B) sapply(1:dim(X)[3], function(i) X[,,i]%*%B)
-    `%wt%` <- function(X, B) sapply(1:dim(X)[3], function(i) t(X[,,i])%*%B)
-    `%i%` <- function(X, B) sapply(1:dim(X)[3], function(i) sum(X[,,i]*B))
-    `%R%` <- function(X, y){
-      if(family=="gaussian") return(X%L%y)
-      if(family=="binomial") return(X%b%y)
-      if(family=="poisson") return(X%p%y)
+  ALS <- function(DATA, n_R, family, opt = opt, max_ite = max_ite, 
+                  tol = tol) {
+    `%L%` <- function(X, y) solve(t(X) %*% X, t(X) %*% (y - 
+                                                          offset_vec))
+    `%b%` <- function(X, y) as.vector(coefficients(glm(y ~ 
+                                                         -1 + X, offset = offset_vec, family = "binomial")))
+    `%p%` <- function(X, y) as.vector(coefficients(glm(y ~ 
+                                                         -1 + X, offset = offset_vec, family = "poisson")))
+    `%w%` <- function(X, B) sapply(1:dim(X)[3], function(i) X[, 
+                                                              , i] %*% B)
+    `%wt%` <- function(X, B) sapply(1:dim(X)[3], function(i) t(X[, 
+                                                                 , i]) %*% B)
+    `%i%` <- function(X, B) sapply(1:dim(X)[3], function(i) sum(X[, 
+                                                                  , i] * B))
+    `%R%` <- function(X, y) {
+      if (family == "gaussian") 
+        return(X %L% y)
+      if (family == "binomial") 
+        return(X %b% y)
+      if (family == "poisson") 
+        return(X %p% y)
     }
-
-    # Input
-    y <- DATA$y; X <- DATA$X; W <- DATA$W
-    n_vec <- dim(DATA$X); n <- n_vec[3]; n_P <- n_vec[1]; n_G <- n_vec[2]
+    y <- DATA$y
+    X <- DATA$X
+    W <- DATA$W
+    n_vec <- dim(DATA$X)
+    n <- n_vec[3]
+    n_P <- n_vec[1]
+    n_G <- n_vec[2]
     n_d <- ncol(W)
-
-    # Calculate B, B_variance, IC, and deviances.
-    Z <- matrix(0, n, n_P*n_G)
-    for(i in 1:n) Z[i,] <- c(X[,,i])
+    Z <- matrix(0, n, n_P * n_G)
+    for (i in 1:n) Z[i, ] <- c(X[, , i])
     Q <- cbind(W, Z)
-    B_1_temp <- matrix(rnorm(n_P*n_R), n_P, n_R)
+    B_1_temp <- matrix(rnorm(n_P * n_R), n_P, n_R)
     test <- 1
-    ## 1. Non-low rank
-    if(n_R == n_P){
-      temp <- summary(glm(y~Q, family=family))$coefficients
-      V_Bhat <- temp[,2]
-      # Variances
+    if (n_R == n_P) {
+      temp <- summary(glm(y ~ Q, family = family))$coefficients
       sel <- 1:n_d
-      V_b <- as.matrix(V_Bhat[sel]);rownames(V_b) <- NULL
-      V_B <- matrix(V_Bhat[-sel], n_P, n_G)
-      # Coefficients
-      beta <- as.matrix(temp[1:n_d,1]);rownames(beta) <- NULL
-      B <- matrix(temp[-c(1:n_d),1], n_P, n_G)
-      # IC and Deviance
-      w_seq <- X%i%B + W%*%beta
+      Std_Bhat <- temp[, 2]
+      Std_b <- as.matrix(Std_Bhat[sel])
+      rownames(Std_b) <- NULL
+      Std_B <- matrix(Std_Bhat[-sel], n_P, n_G)
+      V_b <- Std_b^2
+      V_B <- Std_B^2
+      beta <- as.matrix(temp[1:n_d, 1])
+      rownames(beta) <- NULL
+      B <- matrix(temp[-c(1:n_d), 1], n_P, n_G)
+      w_seq <- X %i% B + W %*% beta
       res <- y - w_seq
-      IC_Dev <- Calculate_IC_Dev(w_seq, n_P*n_G+n_d, family)
-      # Number of Iteration
+      IC_Dev <- Calculate_IC_Dev(w_seq, n_P * n_G + n_d, 
+                                 family)
       ite_index <- 1
-
-      ## 2. Non-low rank
-    }else{
-      ### initial: beta
+    }
+    else {
       offset_vec <- rep(0, n)
-      beta <- W%R%y
-      ### initial: B_1
-      B_1 <- matrix(B_1_temp[,1:n_R], n_P, n_R)
+      beta <- W %R% y
+      B_1 <- matrix(B_1_temp[, 1:n_R], n_P, n_R)
       H <- matrix(B_1[1:n_R, 1:n_R], n_R, n_R)
-      C <- matrix(B_1[-c(1:n_R), 1:n_R], n_P-n_R, n_R)
-      ### initial: B_2
+      C <- matrix(B_1[-c(1:n_R), 1:n_R], n_P - n_R, n_R)
       B_2 <- matrix(0, n_G, n_R)
-      ### initial: B
-      B <- B_1%*%t(B_2)
-      # Updating B
-      for(ite_index in 1:max_ite){
-        # update B2
-        offset_vec <- W%*%beta
-        B_2_new <- matrix(t(X%wt%B_1)%R%y, n_G, n_R)
-        # update B1
-        offset_vec <- W%*%beta
-        B_1_new <- matrix(t(X%w%B_2_new)%R%y, n_P, n_R)
+      B <- B_1 %*% t(B_2)
+      for (ite_index in 1:max_ite) {
+        offset_vec <- W %*% beta
+        B_2_new <- matrix(t(X %wt% B_1) %R% y, n_G, n_R)
+        offset_vec <- W %*% beta
+        B_1_new <- matrix(t(X %w% B_2_new) %R% y, n_P, 
+                          n_R)
         G <- matrix(B_1_new[n_R, n_R], n_R, n_R)
-        # update B
         B_new <- B_1_new %*% t(B_2_new)
-        # update beta
-        offset_vec <- X%i%B_new
-        beta_new <- W%R%y
-        # Stopping criterion
-        if(opt==1) test <- max(max(abs(B_new-B)), max(abs(beta_new-beta)))
-        if(opt==2) test <- max(c(abs(B_1-B_1_new)), c(abs(B_2-B_2_new)), abs(beta_new-beta))
-        B_1 <- B_1_new; B_2 <- B_2_new; beta <- beta_new; B <- B_new
-        # cat(ite_index, test, "\n")
-        if(test < tol) break
+        offset_vec <- X %i% B_new
+        beta_new <- W %R% y
+        if (opt == 1) 
+          test <- max(max(abs(B_new - B)), max(abs(beta_new - 
+                                                     beta)))
+        if (opt == 2) 
+          test <- max(c(abs(B_1 - B_1_new)), c(abs(B_2 - 
+                                                     B_2_new)), abs(beta_new - beta))
+        B_1 <- B_1_new
+        B_2 <- B_2_new
+        beta <- beta_new
+        B <- B_new
+        if (test < tol) 
+          break
       }
-      # B variance
       beta <- as.matrix(beta)
-      w_seq <- X%i%B + W%*%beta
-      df <- n_d + (n_G + n_P - n_R)*n_R
+      w_seq <- X %i% B + W %*% beta
+      df <- n_d + (n_G + n_P - n_R) * n_R
       V <- VAR_ALS(DATA, n_R, B_1, B_2, beta, family)
-      if(is.na(V$V_B[1,1])){
+      if (is.na(V$V_B[1, 1])) {
         df <- prod(dim(B))
-        V_B <- matrix(NA, df, df)
-        V_b <- matrix(NA, n_d, n_d)
-      }else{
-        V_B <- sqrt(t(matrix(diag(V$V_B), n_G, n_P)))
-        V_b <- as.matrix(sqrt(diag(V$V_b)))
+        Std_B <- matrix(NA, df, df)
+        Std_b <- matrix(NA, n_d, n_d)
       }
-      # IC and Deviance
+      else {
+        V_B <- V$V_B
+        V_b <- V$Vb
+        Std_B <- sqrt(t(matrix(diag(V$V_B), n_G, n_P)))
+        Std_b <- sqrt(as.matrix(diag(V$V_b)))
+      }
       IC_Dev <- Calculate_IC_Dev(w_seq, df, family)
     }
-
-    # Wald test
-    if(is.na(V_B[1])){
-      B_PV <- V_B
-      b_PV <- V_b
-    }else{
-      B_PV <- pnorm(-abs(B/V_B))*2
-      b_PV <- pnorm(-abs(beta/V_b))*2
+    if (is.na(Std_B[1])) {
+      B_PV <- Std_B
+      b_PV <- Std_b
     }
-
-    # Tidy-up result
-    if(family=="gaussian"){
-      result <- list(ite=ite_index, b_EST = beta, b_SD = V_b, b_PV = b_PV,
-                     B_EST = B, B_SD = V_B, B_PV = B_PV, Residuals = IC_Dev$Residuals,
+    else {
+      if(family == "gaussian"){
+        B_PV <- pt(-abs(B/Std_B), IC_Dev$DoF[2]) * 2
+        b_PV <- pt(-abs(beta/Std_b), IC_Dev$DoF[2]) * 2
+      }
+      else {
+        B_PV <- pnorm(-abs(B/Std_B)) * 2
+        b_PV <- pnorm(-abs(beta/Std_b)) * 2
+      }
+    }
+    if (family == "gaussian") {
+      result <- list(ite = ite_index, b_EST = beta, b_SD = Std_b,
+                     b_PV = b_PV, B_EST = B, B_SD = Std_B,
+                     B_PV = B_PV, Residuals = IC_Dev$Residuals, 
                      IC = IC_Dev$IC, DoF = IC_Dev$DoF)
-    }else{
-      result <- list(ite=ite_index, b_EST = beta, b_SD = V_b, b_PV = b_PV,
-                     B_EST = B, B_SD = V_B, B_PV = B_PV, Dev_res = IC_Dev$Dev_res,
+    }
+    else {
+      result <- list(ite = ite_index, b_EST = beta, b_SD = Std_b,
+                     b_PV = b_PV, B_EST = B, B_SD = Std_B,
+                     B_PV = B_PV, Dev_res = IC_Dev$Dev_res, 
                      Dev = IC_Dev$Dev, IC = IC_Dev$IC, DoF = IC_Dev$DoF)
     }
-
     return(result)
   }
-
-  # Execution
   Tidy_data <- Check_tidy_input(y, X, W, family)
-  result <- ALS(Tidy_data$DATA, n_R, family, opt = opt, max_ite = max_ite, tol = tol)
+  result <- ALS(Tidy_data$DATA, n_R, family, opt = opt, max_ite = max_ite, 
+                tol = tol)
   result$call <- Tidy_data$fm
   result$family <- family
   class(result) <- "tsglm"
   return(result)
 }
-

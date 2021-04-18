@@ -20,7 +20,7 @@ TRtest.omics(
 
 \item{X}{A numerical 3-D arrary. Independent variable(3-D tensor).}
 
-\item{W}{A numerical vector. Independent variable.}
+\item{W}{A numerical matrix. Independent variable.}
 
 \item{n_R}{A numerical constant. A predefined value determines the rank of
 the approximate matrix}
@@ -51,13 +51,13 @@ TRtest.omics returns an object of \kbd{"tsglm"}.
   \kbd{b_EST}: The estimated coefficients for numerical variables.
 
   \kbd{b_SD}: The estimated standard deviation for numerical variables.
-
+ 
   \kbd{b_PV}: The p-value for numerical variables.
 
   \kbd{B_EST}: The estimated coefficients for 3-D tensor variables.
 
   \kbd{B_SD}: The estimated standard deviation for 3-D tensor variables.
-
+  
   \kbd{B_PV}: The p-value for 3-D tensor variables.
 
   \kbd{Residuals}: The differences between true values and prediction values. Provide for
@@ -159,18 +159,21 @@ result_R <- TRtest.omics(y = DATA_R$y, X = DATA_R$X, W=NULL, n_R = 1, family = "
 opt = 1, max_ite = 100, tol = 10^(-7) )
 ## Visualization
 image(B_True);image(result_R$B_EST)
+head(predict(result_R, DATA_R$X))
 
 ## Binomial
 result_B <- TRtest.omics(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
 opt = 1, max_ite = 100, tol = 10^(-7) )
 ## Visualization
 image(B_True);image(result_B$B_EST)
+head(predict(result_B, DATA_B$X))
 
 ## Poisson
 result_P <- TRtest.omics(y = DATA_P$y, X = DATA_P$X, W=NULL, n_R = 1, family = "poisson",
 opt = 1, max_ite = 100, tol = 10^(-7) )
 ## Visualization
 image(B_True);image(result_P$B_EST)
+head(predict(result_P, DATA_P$X))
 
 }
 \references{
