@@ -1,7 +1,7 @@
 Package: TensorTest2D
 Type: Package
 Title: Fitting Second-Order Tensor Data
-Version: 1.0.1
+Version: 1.0.2
 Depends: R (>= 3.5.0)
 Authors@R: c(
   person("Mark", "Chen", email = "l501l501l@gmail.com", role = c("aut", "cre")),
@@ -14,15 +14,14 @@ Description: An implementation of fitting generalized linear models on
 License: GPL
 Encoding: UTF-8
 LazyData: true
-LazyDataCompression: true
+LazyDataCompression: bzip2
 RoxygenNote: 7.1.1
-Suggests: knitr, rmarkdown
 NeedsCompilation: no
-Packaged: 2021-04-18 15:01:12 UTC; l501l
+Packaged: 2021-04-24 08:04:08 UTC; l501l
 Author: Mark Chen [aut, cre],
   Sheng-Mao Chang [aut],
   Wenbin Lu [aut],
   Jung-Ying Tzeng [aut]
 Maintainer: Mark Chen <l501l501l@gmail.com>
 Repository: CRAN
-Date/Publication: 2021-04-18 21:50:11 UTC
+Date/Publication: 2021-04-24 12:20:08 UTC
