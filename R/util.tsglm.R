@@ -17,7 +17,7 @@
 #' For example, for a binomial model, the predictions are log-odds (probabilities on logit scale) 
 #' if \code{type = "link"}, and \code{type = "response"} gives the predicted probabilities of Y=1.
 #'
-#' @seealso \code{\link{TRtest.omics}, \link{summary.tsglm}}
+#' @seealso \code{\link{TRtest}, \link{summary.tsglm}}
 #'
 #' @examples
 #' # Predefined function: sum of hadamard product in each array
@@ -47,21 +47,21 @@
 #'
 #' # Execution
 #' ## Regression
-#' result_R <- TRtest.omics(y = DATA_R$y, X = DATA_R$X, W=NULL, n_R = 1, family = "gaussian",
+#' result_R <- TRtest(y = DATA_R$y, X = DATA_R$X, W=NULL, n_R = 1, family = "gaussian",
 #' opt = 1, max_ite = 100, tol = 10^(-7) )
 #' ## Visualization
 #' image(B_True);image(result_R$B_EST)
 #' head(predict(result_R, DATA_R$X))
 #'
 #' ## Binomial
-#' result_B <- TRtest.omics(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
+#' result_B <- TRtest(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
 #' opt = 1, max_ite = 100, tol = 10^(-7) )
 #' ## Visualization
 #' image(B_True);image(result_B$B_EST)
 #' head(predict(result_B, DATA_B$X))
 #'
 #' ## Poisson
-#' result_P <- TRtest.omics(y = DATA_P$y, X = DATA_P$X, W=NULL, n_R = 1, family = "poisson",
+#' result_P <- TRtest(y = DATA_P$y, X = DATA_P$X, W=NULL, n_R = 1, family = "poisson",
 #' opt = 1, max_ite = 100, tol = 10^(-7) )
 #' ## Visualization
 #' image(B_True);image(result_P$B_EST)
@@ -109,7 +109,7 @@ predict.tsglm <- function(object, newx, type = c("link", "response"), ...){
 #' If \code{background = NULL}, the background color shows the effect size of the each pixel.
 #' @param ... further arguments passed to the \code{\link[graphics]{image}} function.
 #'
-#' @seealso \code{\link{TRtest.omics}, \link{drawpixelmarks}}
+#' @seealso \code{\link{TRtest}, \link{drawpixelmarks}}
 #'
 #' @examples
 #' # Predefined function: sum of hadamard product in each array
@@ -131,7 +131,7 @@ predict.tsglm <- function(object, newx, type = c("link", "response"), ...){
 #' DATA_B <- list(y = y_B, W = W, X = X)
 #'
 #' # Binomial Model
-#' result_B <- TRtest.omics(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
+#' result_B <- TRtest(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
 #' opt = 1, max_ite = 100, tol = 10^(-7) )
 #' 
 #' # Plot the effect size of the effective pixels

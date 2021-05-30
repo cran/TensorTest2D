@@ -3,7 +3,7 @@
 S3method(plot,tsglm)
 S3method(predict,tsglm)
 S3method(summary,tsglm)
-export(TRtest.omics)
+export(TRtest)
 export(drawpixelmarks)
 import(graphics)
 importFrom(grDevices,rgb)

@@ -39,7 +39,7 @@ y_B <- rbinom(n, 1, p_B)
 DATA_B <- list(y = y_B, W = W, X = X)
 
 # Binomial Model
-result_B <- TRtest.omics(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
+result_B <- TRtest(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
 opt = 1, max_ite = 100, tol = 10^(-7) )
 
 # Plot the effect size of the effective pixels
@@ -53,7 +53,7 @@ plot(result_B, "fdr", m0, col = gray(seq(0, 1, 0.05)))
 
 }
 \seealso{
-\code{\link{TRtest.omics}, \link{drawpixelmarks}}
+\code{\link{TRtest}, \link{drawpixelmarks}}
 }
 \author{
 Ping-Yang Chen

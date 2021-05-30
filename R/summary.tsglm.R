@@ -58,19 +58,19 @@
 #'
 #' # Execution
 #' ## Regression
-#' result_R <- TRtest.omics(y = DATA_R$y, X = DATA_R$X, W=NULL, n_R = 1, family = "gaussian",
+#' result_R <- TRtest(y = DATA_R$y, X = DATA_R$X, W=NULL, n_R = 1, family = "gaussian",
 #' opt = 1, max_ite = 100, tol = 10^(-7) )
 #' summary(result_R)
 #' head(predict(result_R, DATA_R$X))
 #'
 #' ## Binomial
-#' result_B <- TRtest.omics(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
+#' result_B <- TRtest(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
 #' opt = 1, max_ite = 100, tol = 10^(-7) )
 #' summary(result_B)
 #' head(predict(result_B, DATA_B$X))
 #'
 #' ## Poisson
-#' result_P <- TRtest.omics(y = DATA_P$y, X = DATA_P$X, W=NULL, n_R = 1, family = "poisson",
+#' result_P <- TRtest(y = DATA_P$y, X = DATA_P$X, W=NULL, n_R = 1, family = "poisson",
 #' opt = 1, max_ite = 100, tol = 10^(-7) )
 #' summary(result_P)
 #' head(predict(result_P, DATA_P$X))
