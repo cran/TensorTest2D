@@ -44,15 +44,22 @@ formatting the coefficients, standard errors, etc. and additionally gives 'signi
 # Simulation data
 n <- 1000 # number of observations
 n_P <- 3; n_G <- 64 # dimension of 3-D tensor variables.
-n_d <- 1 # number of numerical variable, if n_d == 1,  numerical variable equals to intercept.
+n_d <- 2 # number of numerical variable, if n_d == 1,  numerical variable equals to intercept.
 beta_True <- rep(1, n_d)
 B_True <- c(1,1,1)\%*\%t(rnorm(n_G)) + c(0, .5, .5)\%*\%t(rnorm(n_G))
 B_True <- B_True / 10
 W <- matrix(rnorm(n*n_d), n, n_d); W[,1] <- 1
+W_named <- W 
+colnames(W_named) <- paste0("w", 1:ncol(W_named))
 X <- array(rnorm(n*n_P*n_G), dim=c(n_P, n_G, n))
+X_named <- X
+colnames(X_named) <- paste0("C", 1:ncol(X_named))
+rownames(X_named) <- paste0("R", 1:nrow(X_named))
 ## Regression
-y_R<- as.vector(W\%*\%beta_True + X\%i\%B_True + rnorm(n))
+y_R <- as.vector(W\%*\%beta_True + X\%i\%B_True + rnorm(n))
 DATA_R <- list(y = y_R, X = X, W = W)
+y_R_named <- as.vector(W_named\%*\%beta_True + X_named\%i\%B_True + rnorm(n))
+DATA_R_named <- list(y = y_R_named, X = X_named, W = W_named)
 ## Binomial
 p_B <- exp(W\%*\%beta_True + X\%i\%B_True); p_B <- p_B/(1+p_B)
 y_B <- rbinom(n, 1, p_B)
@@ -82,6 +89,10 @@ opt = 1, max_ite = 100, tol = 10^(-7) )
 summary(result_P)
 head(predict(result_P, DATA_P$X))
 
+## Regression with specified names
+result_R_named <- TRtest(y = DATA_R_named$y, X = DATA_R_named$X, W=DATA_R_named$W,
+n_R = 1, family = "gaussian", opt = 1, max_ite = 100, tol = 10^(-7) )
+summary(result_R_named)
 
 }
 \seealso{

@@ -159,7 +159,7 @@
 #'
 #' @export
 TRtest <- function (y, X, W = NULL, n_R, family, opt = 1, max_ite = 100, 
-                          tol = 10^(-7)) 
+                    tol = 10^(-7)) 
 {
   Default_family <- c("gaussian", "binomial", "poisson")
   Check_tidy_input <- function(y, X, W, family) {
@@ -339,6 +339,7 @@ TRtest <- function (y, X, W = NULL, n_R, family, opt = 1, max_ite = 100,
   }
   ALS <- function(DATA, n_R, family, opt = opt, max_ite = max_ite, 
                   tol = tol) {
+    # Predefined-function
     `%L%` <- function(X, y) solve(t(X) %*% X, t(X) %*% (y - 
                                                           offset_vec))
     `%b%` <- function(X, y) as.vector(coefficients(glm(y ~ 
@@ -359,6 +360,7 @@ TRtest <- function (y, X, W = NULL, n_R, family, opt = 1, max_ite = 100,
       if (family == "poisson") 
         return(X %p% y)
     }
+    # Preprocess data
     y <- DATA$y
     X <- DATA$X
     W <- DATA$W
@@ -372,6 +374,8 @@ TRtest <- function (y, X, W = NULL, n_R, family, opt = 1, max_ite = 100,
     Q <- cbind(W, Z)
     B_1_temp <- matrix(rnorm(n_P * n_R), n_P, n_R)
     test <- 1
+    # Two kinds of iterations
+    ## n_R == n_P
     if (n_R == n_P) {
       temp <- summary(glm(y ~ Q, family = family))$coefficients
       sel <- 1:n_d
@@ -390,6 +394,7 @@ TRtest <- function (y, X, W = NULL, n_R, family, opt = 1, max_ite = 100,
                                  family)
       ite_index <- 1
     }
+    # n_R != n_P
     else {
       offset_vec <- rep(0, n)
       beta <- W %R% y
@@ -438,6 +443,7 @@ TRtest <- function (y, X, W = NULL, n_R, family, opt = 1, max_ite = 100,
       }
       IC_Dev <- Calculate_IC_Dev(w_seq, df, family)
     }
+    # Calculate P value
     if (is.na(Std_B[1])) {
       B_PV <- Std_B
       b_PV <- Std_b
@@ -452,6 +458,10 @@ TRtest <- function (y, X, W = NULL, n_R, family, opt = 1, max_ite = 100,
         b_PV <- pnorm(-abs(beta/Std_b)) * 2
       }
     }
+    # Organize results
+    rownames(B) <- rownames(X)
+    colnames(B) <- colnames(X)
+    rownames(beta) <- colnames(W)
     if (family == "gaussian") {
       result <- list(ite = ite_index, b_EST = beta, b_SD = Std_b,
                      b_PV = b_PV, B_EST = B, B_SD = Std_B,
