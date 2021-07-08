@@ -2,7 +2,7 @@
 #'
 #' The omics data is a subset of the dataset provided by cancer cell line
 #' encyclopedia (CCLE) project (Barretina et al., 2012;
-#' \url{https://portals.broadinstitute.org/ccle/about}).
+#' \url{https://sites.broadinstitute.org/ccle/}).
 #' 
 #' @details  This data consists of one response variable and ten genes
 #' evaluated under three different platforms. 

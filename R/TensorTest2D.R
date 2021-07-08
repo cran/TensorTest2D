@@ -21,6 +21,8 @@
 #' Wenbin Lu \email{wlu4@ncsu.edu}
 #'
 #' Jung-Ying Tzeng \email{jytzeng@ncsu.edu}
+#' 
+#' Ping-Yang Chen \email{pychen.ping@gmail.com}
 #'
 #' Maintainer: Mark Chen \email{l501l501l@gmail.com}
 #'

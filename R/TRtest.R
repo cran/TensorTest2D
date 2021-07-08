@@ -1,18 +1,18 @@
 #' Fitting Second-order Tensor Generalized Regression
 #'
-#' \kbd{TRtest.omics} is used to fit second-order tensor generalized regression model. It mainly
+#' \kbd{TRtest} is used to fit second-order tensor generalized regression model. It mainly
 #' focus on parameter estimation, including parameter coefficients and standard
 #' deviation. The function is built upon \strong{Alternating Least Square
 #' Algorithm}, so we provide two criterion to determine optimal result (see more
 #' details below in Arguments). Also, we offer model complexity
 #' measurement,including AIC and BIC.
 #'
-#' @details \kbd{TRtest.omics} focuses on second-order tensor generalized regression problems.
+#' @details \kbd{TRtest} focuses on second-order tensor generalized regression problems.
 #' To be more specific, it provides statistical inference for input variables.
 #' Moreover, the function isn't restricted to second-order tensor input \kbd{X};
 #' it could combine with other meaningful numerical variables \kbd{W}.
 #'
-#' Since \kbd{TRtest.omics} is based on  \strong{Alternating Least Square
+#' Since \kbd{TRtest} is based on  \strong{Alternating Least Square
 #' Algorithm}, we need to predefine following arguments to meet favorable
 #' optimization result.
 #'
@@ -26,7 +26,7 @@
 #' estimate a unknown parameter matrix. By default, \kbd{n_R = 1}.
 #'
 #' \kbd{opt}: In optimization algorithm, we have to determine stopping
-#' criterion. In \kbd{TRtest.omics}, we offer two criteria. \kbd{If opt = 1}, the
+#' criterion. In \kbd{TRtest}, we offer two criteria. \kbd{If opt = 1}, the
 #' criterion is that we stop our execution when the maximum difference between
 #' the elements among an estimated parameter matrix \strong{B} with an estimated
 #' parameter vector \strong{b} and preceding ones is less than predefined
@@ -36,7 +36,7 @@
 #' parameter vector \strong{b} and preceding ones is less than predefined
 #' tolerance (\kbd{tol}).
 #'
-#' \kbd{family}: In \kbd{TRtest.omics}, we provide three options for specific generalized regression
+#' \kbd{family}: In \kbd{TRtest}, we provide three options for specific generalized regression
 #' problem. First, \kbd{family = "gaussian"} using \kbd{identity} link function corresponds to linear regression
 #' model, where dependent variable is real number. Next, \kbd{family = "binomial"} based on \kbd{logit} link function
 #' corresponds to logistic regression, where dependent variable is restricted to zero or one binary variable. Finally,
@@ -65,7 +65,7 @@
 #'   algorithm.
 #' @param tol Tolerance. The value of tolerance with respect to optimization.
 #'
-#' @return TRtest.omics returns an object of \kbd{"tsglm"}.
+#' @return TRtest returns an object of \kbd{"tsglm"}.
 #'
 #'  The function, \code{\link{summary.tsglm}} a customized method from generic function
 #'  \code{\link[base]{summary}}, can be used to obtain and print a summary and analysis
@@ -108,7 +108,7 @@
 #' `%i%` <- function(X, B) sapply(1:dim(X)[3], function(i) sum(X[,,i]*B))
 #'
 #' # Simulation data
-#' n <- 1000 # number of observations
+#' n <- 500 # number of observations
 #' n_P <- 3; n_G <- 64 # dimension of 3-D tensor variables.
 #' n_d <- 1 # number of numerical variable, if n_d == 1,  numerical variable equals to intercept.
 #' beta_True <- rep(1, n_d)
@@ -131,21 +131,21 @@
 #'
 #' # Execution
 #' ## Regression
-#' result_R <- TRtest.omics(y = DATA_R$y, X = DATA_R$X, W=NULL, n_R = 1, family = "gaussian",
+#' result_R <- TRtest(y = DATA_R$y, X = DATA_R$X, W=NULL, n_R = 1, family = "gaussian",
 #' opt = 1, max_ite = 100, tol = 10^(-7) )
 #' ## Visualization
 #' image(B_True);image(result_R$B_EST)
 #' head(predict(result_R, DATA_R$X))
 #'
 #' ## Binomial
-#' result_B <- TRtest.omics(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
+#' result_B <- TRtest(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
 #' opt = 1, max_ite = 100, tol = 10^(-7) )
 #' ## Visualization
 #' image(B_True);image(result_B$B_EST)
 #' head(predict(result_B, DATA_B$X))
 #'
 #' ## Poisson
-#' result_P <- TRtest.omics(y = DATA_P$y, X = DATA_P$X, W=NULL, n_R = 1, family = "poisson",
+#' result_P <- TRtest(y = DATA_P$y, X = DATA_P$X, W=NULL, n_R = 1, family = "poisson",
 #' opt = 1, max_ite = 100, tol = 10^(-7) )
 #' ## Visualization
 #' image(B_True);image(result_P$B_EST)
@@ -158,8 +158,8 @@
 #' @author Sheng-Mao Chang
 #'
 #' @export
-TRtest.omics <- function (y, X, W = NULL, n_R, family, opt = 1, max_ite = 100, 
-                          tol = 10^(-7)) 
+TRtest <- function (y, X, W = NULL, n_R, family, opt = 1, max_ite = 100, 
+                    tol = 10^(-7)) 
 {
   Default_family <- c("gaussian", "binomial", "poisson")
   Check_tidy_input <- function(y, X, W, family) {
@@ -339,6 +339,7 @@ TRtest.omics <- function (y, X, W = NULL, n_R, family, opt = 1, max_ite = 100,
   }
   ALS <- function(DATA, n_R, family, opt = opt, max_ite = max_ite, 
                   tol = tol) {
+    # Predefined-function
     `%L%` <- function(X, y) solve(t(X) %*% X, t(X) %*% (y - 
                                                           offset_vec))
     `%b%` <- function(X, y) as.vector(coefficients(glm(y ~ 
@@ -359,6 +360,7 @@ TRtest.omics <- function (y, X, W = NULL, n_R, family, opt = 1, max_ite = 100,
       if (family == "poisson") 
         return(X %p% y)
     }
+    # Preprocess data
     y <- DATA$y
     X <- DATA$X
     W <- DATA$W
@@ -372,6 +374,8 @@ TRtest.omics <- function (y, X, W = NULL, n_R, family, opt = 1, max_ite = 100,
     Q <- cbind(W, Z)
     B_1_temp <- matrix(rnorm(n_P * n_R), n_P, n_R)
     test <- 1
+    # Two kinds of iterations
+    ## n_R == n_P
     if (n_R == n_P) {
       temp <- summary(glm(y ~ Q, family = family))$coefficients
       sel <- 1:n_d
@@ -390,6 +394,7 @@ TRtest.omics <- function (y, X, W = NULL, n_R, family, opt = 1, max_ite = 100,
                                  family)
       ite_index <- 1
     }
+    # n_R != n_P
     else {
       offset_vec <- rep(0, n)
       beta <- W %R% y
@@ -438,6 +443,7 @@ TRtest.omics <- function (y, X, W = NULL, n_R, family, opt = 1, max_ite = 100,
       }
       IC_Dev <- Calculate_IC_Dev(w_seq, df, family)
     }
+    # Calculate P value
     if (is.na(Std_B[1])) {
       B_PV <- Std_B
       b_PV <- Std_b
@@ -452,6 +458,15 @@ TRtest.omics <- function (y, X, W = NULL, n_R, family, opt = 1, max_ite = 100,
         b_PV <- pnorm(-abs(beta/Std_b)) * 2
       }
     }
+    # Organize results
+    X_names <- dimnames(X)[1:2]
+    dimnames(B) <- X_names
+    dimnames(Std_B) <- X_names
+    dimnames(B_PV) <- X_names
+    W_names <- colnames(W)
+    rownames(beta) <- W_names
+    rownames(Std_b) <- W_names
+    rownames(b_PV) <- W_names
     if (family == "gaussian") {
       result <- list(ite = ite_index, b_EST = beta, b_SD = Std_b,
                      b_PV = b_PV, B_EST = B, B_SD = Std_B,

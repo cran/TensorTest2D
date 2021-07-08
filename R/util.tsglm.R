@@ -17,14 +17,14 @@
 #' For example, for a binomial model, the predictions are log-odds (probabilities on logit scale) 
 #' if \code{type = "link"}, and \code{type = "response"} gives the predicted probabilities of Y=1.
 #'
-#' @seealso \code{\link{TRtest.omics}, \link{summary.tsglm}}
+#' @seealso \code{\link{TRtest}, \link{summary.tsglm}}
 #'
 #' @examples
 #' # Predefined function: sum of hadamard product in each array
 #' `%i%` <- function(X, B) sapply(1:dim(X)[3], function(i) sum(X[,,i]*B))
 #'
 #' # Simulation data
-#' n <- 1000 # number of observations
+#' n <- 500 # number of observations
 #' n_P <- 3; n_G <- 64 # dimension of 3-D tensor variables.
 #' n_d <- 1 # number of numerical variable, if n_d == 1,  numerical variable equals to intercept.
 #' beta_True <- rep(1, n_d)
@@ -47,24 +47,21 @@
 #'
 #' # Execution
 #' ## Regression
-#' result_R <- TRtest.omics(y = DATA_R$y, X = DATA_R$X, W=NULL, n_R = 1, family = "gaussian",
+#' result_R <- TRtest(y = DATA_R$y, X = DATA_R$X, W=NULL, n_R = 1, family = "gaussian",
 #' opt = 1, max_ite = 100, tol = 10^(-7) )
-#' ## Visualization
-#' image(B_True);image(result_R$B_EST)
+#' ## Prediction
 #' head(predict(result_R, DATA_R$X))
 #'
 #' ## Binomial
-#' result_B <- TRtest.omics(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
+#' result_B <- TRtest(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
 #' opt = 1, max_ite = 100, tol = 10^(-7) )
-#' ## Visualization
-#' image(B_True);image(result_B$B_EST)
+#' ## Prediction
 #' head(predict(result_B, DATA_B$X))
 #'
 #' ## Poisson
-#' result_P <- TRtest.omics(y = DATA_P$y, X = DATA_P$X, W=NULL, n_R = 1, family = "poisson",
+#' result_P <- TRtest(y = DATA_P$y, X = DATA_P$X, W=NULL, n_R = 1, family = "poisson",
 #' opt = 1, max_ite = 100, tol = 10^(-7) )
-#' ## Visualization
-#' image(B_True);image(result_P$B_EST)
+#' ## Prediction
 #' head(predict(result_P, DATA_P$X))
 #'
 #' @author Ping-Yang Chen
@@ -73,7 +70,7 @@
 predict.tsglm <- function(object, newx, type = c("link", "response"), ...){
   
   type <- match.arg(type)
-  
+
   `%i%` <- function(X, B) sapply(1:dim(X)[3], function(i) sum(X[,,i]*B))
   eta <- rep(1, dim(newx)[3]) %*% object$b_EST + newx %i% object$B_EST
   
@@ -105,22 +102,32 @@ predict.tsglm <- function(object, newx, type = c("link", "response"), ...){
 #'
 #' @param x an object of class \kbd{"tsglm"}.
 #' @param method p-value correction method. See \code{\link[stats]{p.adjust}}.
+#' @param alpha double. The value of significance level. Its default value is 0.05.
+#' @param type string. The type of values shown on the image pixels when \code{background = NULL}.
+#' Set \code{type = 'coef'} for showing the values of estimated coefficients of the \(B\) matrix.
+#' Set \code{type = 'tval'} for showing the t-statistics of the coefficients of the \(B\) matrix.
+#' If \code{background} is not \code{NULL}, the plot will neglect the choice for 
+#' \code{type} and show the background image as per user's interest.
 #' @param background an image data that used as the background of the effectiveness markers. 
-#' If \code{background = NULL}, the background color shows the effect size of the each pixel.
+#' If \code{background = NULL}, the background color shows the effect size of 
+#' the each pixel according to the setting in \code{type}.
+#' @param showlabels boolean. For \code{showlabels = TRUE}, if the row and column names of the image exist, the row and column names are 
+#' shown on the sides of the image plot; otherwise, the row and column indices are shown. 
+#' @param plot.legend boolean. Set \code{plot.legend = TRUE} if the colorbar legend is needed. The dafault is \code{FALSE}.
 #' @param ... further arguments passed to the \code{\link[graphics]{image}} function.
 #'
-#' @seealso \code{\link{TRtest.omics}, \link{drawpixelmarks}}
+#' @seealso \code{\link{TRtest}, \link{draw.coef}}
 #'
 #' @examples
 #' # Predefined function: sum of hadamard product in each array
 #' `%i%` <- function(X, B) sapply(1:dim(X)[3], function(i) sum(X[,,i]*B))
 #'
 #' # Simulation data
-#' n <- 1000 # number of observations
-#' n_P <- 3; n_G <- 64 # dimension of 3-D tensor variables.
+#' n <- 500 # number of observations
+#' n_P <- 3; n_G <- 16 # dimension of 3-D tensor variables.
 #' n_d <- 1 # number of numerical variable, if n_d == 1,  numerical variable equals to intercept.
 #' beta_True <- rep(1, n_d)
-#' B_True <- c(1,1,1)%*%t(rnorm(n_G)) + c(0, .5, .5)%*%t(rnorm(n_G))
+#' B_True <- c(1, 1, 1)%*%t(rnorm(n_G)) + c(0, .5, .5)%*%t(rnorm(n_G))
 #' B_True <- B_True / 10
 #' W <- matrix(rnorm(n*n_d), n, n_d); W[,1] <- 1
 #' X <- array(rnorm(n*n_P*n_G), dim=c(n_P, n_G, n))
@@ -131,49 +138,73 @@ predict.tsglm <- function(object, newx, type = c("link", "response"), ...){
 #' DATA_B <- list(y = y_B, W = W, X = X)
 #'
 #' # Binomial Model
-#' result_B <- TRtest.omics(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
-#' opt = 1, max_ite = 100, tol = 10^(-7) )
+#' result_B <- TRtest(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1,
+#' family = "binomial", opt = 1, max_ite = 100, tol = 10^(-7) )
 #' 
-#' # Plot the effect size of the effective pixels
-#' plot(result_B, "fdr")
+#' # Plot the effect size of the pixels
+#' plot(result_B, method = "fdr", alpha = 0.05, type = "coef")
+#' # Plot the t-statistics of the coefficients of the pixels
+#' plot(result_B, method = "fdr", alpha = 0.05, type = "tval")
 #'
 #' # Plot the effective pixels with data image as the background
 #' x0 <- DATA_B$X[,,which(DATA_B$y == 0)]
-#' m0 <- matrix(0, dim(DATA_B$X)[1], dim(DATA_B$X)[2])
+#' x1 <- DATA_B$X[,,which(DATA_B$y == 1)]
+#' m0 <- m1 <- matrix(0, dim(DATA_B$X)[1], dim(DATA_B$X)[2])
 #' for (i in 1:dim(x0)[3]) m0 <- m0 + x0[,,i]/dim(x0)[3]
-#' plot(result_B, "fdr", m0, col = gray(seq(0, 1, 0.05)))
+#' for (i in 1:dim(x1)[3]) m1 <- m1 + x1[,,i]/dim(x1)[3]
+#' par(mfrow = c(1, 2), mar = c(2, 2, 2, 2))
+#' plot(result_B, method = "fdr", alpha = 0.05, 
+#' background = m0, col = gray(seq(0, 1, 0.05)))
+#' title("Category 0")
+#' plot(result_B, method = "fdr", alpha = 0.05, 
+#' background = m1, col = gray(seq(0, 1, 0.05)))  
+#' title("Category 1")
 #'
 #' @author Ping-Yang Chen
 #'
 #' @export
-plot.tsglm <- function(x, method = p.adjust.methods, background = NULL, ...){
-  
+plot.tsglm <- function(x, method = p.adjust.methods, alpha = 0.05,
+                       type = c("coef", "tval"), background = NULL,
+                       showlabels = TRUE, plot.legend = FALSE, ...){
+  type <- match.arg(type)
   adjp <- matrix(p.adjust(as.vector(x$B_PV), method = method),
                  nrow(x$B_PV), ncol(x$B_PV))
-  marks <- x$B_EST*(adjp < 0.05)
+  marks <- x$B_EST*(adjp < alpha)
+  if (type == "coef") {
+    imgval <- x$B_EST
+  } else {
+    imgval <- x$B_EST/x$B_SD
+  }
   
   if (is.null(background)) {
     cL <- 20
-    colormap <- rgb(c(rep(0.00, 1*cL), seq(0.00, 1.00, length = 4*cL), rep(1, 3), #R
-                      rep(1.00, 4*cL), seq(1.00, 0.40, length = 1*cL)),
-                    c(rep(0.00, 1*cL), seq(0.00, 1.00, length = 4*cL), rep(1, 3),	#G
-                      seq(1.00, 0.00, length = 4*cL), rep(0.00, 1*cL)),
-                    c(seq(0.40, 1.00, length = 1*cL), rep(1.00, 4*cL), rep(1, 3), #B
-                      seq(1.00, 0.00, length = 4*cL), rep(0.00, 1*cL)),
+    cLim <- .3 
+    #color goes to black at extreme values (clim lower than 1.0, the lower the darker)
+    # colormap <- rgb(c(rep(0.00, 1*cL), seq(0.00, 1.00, length = 4*cL), rep(1, 3), #R
+    #                   rep(1.00, 4*cL), seq(1.00, cLim, length = 1*cL)),
+    #                 c(rep(0.00, 1*cL), seq(0.00, 1.00, length = 4*cL), rep(1, 3), #G
+    #                   seq(1.00, 0.00, length = 4*cL), rep(0.00, 1*cL)),
+    #                 c(seq(cLim, 1.00, length = 1*cL), rep(1.00, 4*cL), rep(1, 3), #B
+    #                   seq(1.00, 0.00, length = 4*cL), rep(0.00, 1*cL)),
+    #                 maxColorValue = 1)
+    #
+    #color goes to brighter red and blue at extreme values (clim lower but not equal to 1.0, the lower the darker)
+    colormap <- rgb(c(seq(cLim, 1.00, length = 5*cL), rep(1, 3), rep(1.00, 5*cL)),
+                    c(seq(cLim, 1.00, length = 5*cL), rep(1, 3), seq(1.00, cLim, length = 5*cL)), 
+                    c(rep(1.00, 5*cL),                rep(1, 3), seq(1.00, cLim, length = 5*cL)),
                     maxColorValue = 1)
-    
-    cM <- ifelse(max(abs(marks)) == 0, 1, max(abs(marks)))
+    #
+    cM <- ifelse(max(abs(imgval)) == 0, 1, max(abs(imgval)))
     cM_digit <- floor(log10(cM))
     if (cM_digit < 0) {
-      imgval <- round(marks, -cM_digit + 3)
+      imgval <- round(imgval, -cM_digit + 3)
       cM <- round(cM, -cM_digit + 3)
-    } else {
-      imgval <- marks
-    }
-    drawpixelmarks(imgval, marks, grids = TRUE, col = colormap, zlim = c(-1,1)*cM)
+    } 
+    draw.coef(imgval, marks, markstyle = 'black', showlabels = showlabels, grids = TRUE, plot.legend = plot.legend, col = colormap, zlim = c(-1,1)*cM)
     
   } else {
-    drawpixelmarks(background, marks, grids = FALSE, ...)
+    
+    draw.coef(background, marks, markstyle = 'bi-dir', showlabels = showlabels, grids = FALSE, plot.legend = plot.legend, ...)
   }
   
 }
@@ -184,9 +215,15 @@ plot.tsglm <- function(x, method = p.adjust.methods, background = NULL, ...){
 #'
 #' @param img a matrix of image data.
 #' @param marks a matrix of the same size as \code{img}. 
-#' On the image plot, "red" rectangles are marked on the pixels in which the cells in \code{marks} are positive, 
+#' On the image plot, the pixels are marked if the corresponding cells in \code{marks} are non-zero.
+#' The user can specify the style of the marks through \code{markstyle}.
+#' @param markstyle string. The style of pixels' marks. If \code{markstyle = 'black'}, the rectangles 
+#' are marked by black edges for non-zero cells in \code{marks}. 
+#' If \code{markstyle = 'bi-dir'}, "red" rectangles are marked on the pixels in which the cells in \code{marks} are positive, 
 #' and, "blue" rectangles are marked on the pixels in which the cells in \code{marks} are negative. 
-#' For zero-valued cells of \code{marks}, there is no mark on the corresponding pixel for the image plot.
+#' @param showlabels boolean. For \code{showlabels = TRUE}, if \code{dimnames(img)} exists, the row and column names are 
+#' shown on the sides of the image plot; otherwise, the row and column indices are shown. 
+#' @param plot.legend boolean. Set \code{plot.legend = TRUE} if the colorbar legend is needed. The dafault is \code{FALSE}.
 #' @param grids boolean. If \code{grids = TRUE}, grid lines are added for the image plot.
 #' @param ... further arguments passed to the \code{\link[graphics]{image}} function.
 #'
@@ -197,23 +234,49 @@ plot.tsglm <- function(x, method = p.adjust.methods, background = NULL, ...){
 #' @author Ping-Yang Chen
 #'
 #' @export
-drawpixelmarks <- function(img, marks, grids = FALSE, ...){
-  
+draw.coef <- function(img, marks, markstyle = c("black", "bi-dir"),
+                      showlabels = TRUE, plot.legend = FALSE, grids = FALSE, ...){
   stopifnot(all(dim(img) == dim(marks)))
+  markstyle <- match.arg(markstyle)
+  B_names <- dimnames(img)
+  if(is.null(B_names)){
+    B_names <- list(paste0(1:nrow(img)), paste0(1:ncol(img)))
+  }
   
+  if (plot.legend){
+    layout(matrix(c(1, 2), 1, 2), widths = c(ncol(img)*.9, ncol(img)*.1))
+    par(mar = c(5, 4, 4, .1)+.1, las = 1)
+  }
   image(1:nrow(img), 1:ncol(img), img, 
-        xlab="", ylab="", axes=FALSE, ...)
+        xlab="", ylab="", xlim=c(.49,nrow(img)+.51), ylim=c(.49,ncol(img)+.51), axes=FALSE, ...)
   if (grids) {
     abline(h = (0:ncol(img)) + .5, col = '#66666666')
     abline(v = (0:nrow(img)) + .5, col = '#66666666')
   }
   for (i in 1:nrow(img)) {
     for (j in 1:ncol(img)) {
-      bcol <- ifelse(marks[i,j] == 0, NA, ifelse(marks[i,j] < 0, "blue", "red"))
-      rect(i-.5, j-.5, i+.5, j+.5, col = NA, border = bcol, lwd = 1)
+      if (markstyle == "black") {
+        if (marks[i,j] != 0) {
+          rect(i-.5, j-.5, i+.5, j+.5, col = NA, border = "black", lwd = 2)
+          arrows(x0 = c(i-.5, i-.5), y0 = c(j-.5, j+.5), 
+                 x1 = c(i+.5, i+.5), y1 = c(j+.5, j-.5), col = "black", code = 0, lwd = 2)
+        }
+      } else {
+        bcol <- ifelse(marks[i,j] == 0, NA, ifelse(marks[i,j] < 0, "blue", "red"))
+        rect(i-.5, j-.5, i+.5, j+.5, col = NA, border = bcol, lwd = 2)
+      }
     }
+  }
+  if (showlabels) {
+    axis(1, at = 1:nrow(img), labels = B_names[[1]], tick = 0, line = -.7)
+    axis(2, at = 1:ncol(img), labels = B_names[[2]], las = 2, tick = 0, line = -.7)  
+  }
+  if (plot.legend){
+    par(mar = c(5, 0, 4, 1)+.1)
+    clen <- 50
+    image(0, 1:clen, matrix(seq(min(img), max(img), length = clen), 1, clen), 
+          xlab="", ylab="", axes=FALSE, ...)
+    mtext(signif(max(img), 2), 3); mtext(signif(min(img), 2), 1)
   }
   
 }
-
-

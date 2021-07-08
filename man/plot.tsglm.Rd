@@ -4,15 +4,38 @@
 \alias{plot.tsglm}
 \title{Plot Effective Image Pixels for A \kbd{"tsglm"} Object}
 \usage{
-\method{plot}{tsglm}(x, method = p.adjust.methods, background = NULL, ...)
+\method{plot}{tsglm}(
+  x,
+  method = p.adjust.methods,
+  alpha = 0.05,
+  type = c("coef", "tval"),
+  background = NULL,
+  showlabels = TRUE,
+  plot.legend = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{an object of class \kbd{"tsglm"}.}
 
 \item{method}{p-value correction method. See \code{\link[stats]{p.adjust}}.}
 
+\item{alpha}{double. The value of significance level. Its default value is 0.05.}
+
+\item{type}{string. The type of values shown on the image pixels when \code{background = NULL}.
+Set \code{type = 'coef'} for showing the values of estimated coefficients of the \(B\) matrix.
+Set \code{type = 'tval'} for showing the t-statistics of the coefficients of the \(B\) matrix.
+If \code{background} is not \code{NULL}, the plot will neglect the choice for 
+\code{type} and show the background image as per user's interest.}
+
 \item{background}{an image data that used as the background of the effectiveness markers. 
-If \code{background = NULL}, the background color shows the effect size of the each pixel.}
+If \code{background = NULL}, the background color shows the effect size of 
+the each pixel according to the setting in \code{type}.}
+
+\item{showlabels}{boolean. For \code{showlabels = TRUE}, if the row and column names of the image exist, the row and column names are 
+shown on the sides of the image plot; otherwise, the row and column indices are shown.}
+
+\item{plot.legend}{boolean. Set \code{plot.legend = TRUE} if the colorbar legend is needed. The dafault is \code{FALSE}.}
 
 \item{...}{further arguments passed to the \code{\link[graphics]{image}} function.}
 }
@@ -24,11 +47,11 @@ If \code{background = NULL}, the background color shows the effect size of the e
 `\%i\%` <- function(X, B) sapply(1:dim(X)[3], function(i) sum(X[,,i]*B))
 
 # Simulation data
-n <- 1000 # number of observations
-n_P <- 3; n_G <- 64 # dimension of 3-D tensor variables.
+n <- 500 # number of observations
+n_P <- 3; n_G <- 16 # dimension of 3-D tensor variables.
 n_d <- 1 # number of numerical variable, if n_d == 1,  numerical variable equals to intercept.
 beta_True <- rep(1, n_d)
-B_True <- c(1,1,1)\%*\%t(rnorm(n_G)) + c(0, .5, .5)\%*\%t(rnorm(n_G))
+B_True <- c(1, 1, 1)\%*\%t(rnorm(n_G)) + c(0, .5, .5)\%*\%t(rnorm(n_G))
 B_True <- B_True / 10
 W <- matrix(rnorm(n*n_d), n, n_d); W[,1] <- 1
 X <- array(rnorm(n*n_P*n_G), dim=c(n_P, n_G, n))
@@ -39,21 +62,31 @@ y_B <- rbinom(n, 1, p_B)
 DATA_B <- list(y = y_B, W = W, X = X)
 
 # Binomial Model
-result_B <- TRtest.omics(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
-opt = 1, max_ite = 100, tol = 10^(-7) )
+result_B <- TRtest(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1,
+family = "binomial", opt = 1, max_ite = 100, tol = 10^(-7) )
 
-# Plot the effect size of the effective pixels
-plot(result_B, "fdr")
+# Plot the effect size of the pixels
+plot(result_B, method = "fdr", alpha = 0.05, type = "coef")
+# Plot the t-statistics of the coefficients of the pixels
+plot(result_B, method = "fdr", alpha = 0.05, type = "tval")
 
 # Plot the effective pixels with data image as the background
 x0 <- DATA_B$X[,,which(DATA_B$y == 0)]
-m0 <- matrix(0, dim(DATA_B$X)[1], dim(DATA_B$X)[2])
+x1 <- DATA_B$X[,,which(DATA_B$y == 1)]
+m0 <- m1 <- matrix(0, dim(DATA_B$X)[1], dim(DATA_B$X)[2])
 for (i in 1:dim(x0)[3]) m0 <- m0 + x0[,,i]/dim(x0)[3]
-plot(result_B, "fdr", m0, col = gray(seq(0, 1, 0.05)))
+for (i in 1:dim(x1)[3]) m1 <- m1 + x1[,,i]/dim(x1)[3]
+par(mfrow = c(1, 2), mar = c(2, 2, 2, 2))
+plot(result_B, method = "fdr", alpha = 0.05, 
+background = m0, col = gray(seq(0, 1, 0.05)))
+title("Category 0")
+plot(result_B, method = "fdr", alpha = 0.05, 
+background = m1, col = gray(seq(0, 1, 0.05)))  
+title("Category 1")
 
 }
 \seealso{
-\code{\link{TRtest.omics}, \link{drawpixelmarks}}
+\code{\link{TRtest}, \link{draw.coef}}
 }
 \author{
 Ping-Yang Chen

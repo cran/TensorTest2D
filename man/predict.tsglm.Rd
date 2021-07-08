@@ -32,7 +32,7 @@ if \code{type = "link"}, and \code{type = "response"} gives the predicted probab
 `\%i\%` <- function(X, B) sapply(1:dim(X)[3], function(i) sum(X[,,i]*B))
 
 # Simulation data
-n <- 1000 # number of observations
+n <- 500 # number of observations
 n_P <- 3; n_G <- 64 # dimension of 3-D tensor variables.
 n_d <- 1 # number of numerical variable, if n_d == 1,  numerical variable equals to intercept.
 beta_True <- rep(1, n_d)
@@ -55,29 +55,26 @@ DATA_P <- list(y = y_P, W = W, X = X)
 
 # Execution
 ## Regression
-result_R <- TRtest.omics(y = DATA_R$y, X = DATA_R$X, W=NULL, n_R = 1, family = "gaussian",
+result_R <- TRtest(y = DATA_R$y, X = DATA_R$X, W=NULL, n_R = 1, family = "gaussian",
 opt = 1, max_ite = 100, tol = 10^(-7) )
-## Visualization
-image(B_True);image(result_R$B_EST)
+## Prediction
 head(predict(result_R, DATA_R$X))
 
 ## Binomial
-result_B <- TRtest.omics(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
+result_B <- TRtest(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
 opt = 1, max_ite = 100, tol = 10^(-7) )
-## Visualization
-image(B_True);image(result_B$B_EST)
+## Prediction
 head(predict(result_B, DATA_B$X))
 
 ## Poisson
-result_P <- TRtest.omics(y = DATA_P$y, X = DATA_P$X, W=NULL, n_R = 1, family = "poisson",
+result_P <- TRtest(y = DATA_P$y, X = DATA_P$X, W=NULL, n_R = 1, family = "poisson",
 opt = 1, max_ite = 100, tol = 10^(-7) )
-## Visualization
-image(B_True);image(result_P$B_EST)
+## Prediction
 head(predict(result_P, DATA_P$X))
 
 }
 \seealso{
-\code{\link{TRtest.omics}, \link{summary.tsglm}}
+\code{\link{TRtest}, \link{summary.tsglm}}
 }
 \author{
 Ping-Yang Chen
