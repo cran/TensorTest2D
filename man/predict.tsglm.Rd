@@ -4,14 +4,16 @@
 \alias{predict.tsglm}
 \title{Predict by Second-order Tensor Generalized Regression}
 \usage{
-\method{predict}{tsglm}(object, newx, type = c("link", "response"), ...)
+\method{predict}{tsglm}(object, newx, neww = NULL, type = c("link", "response"), ...)
 }
 \arguments{
 \item{object}{Fitted \kbd{"tsglm"} object.}
 
 \item{newx}{a 3-dimensional array for \code{x} for which the prediction are interested.}
 
-\item{type}{the type of prediction required. The default is \code{type = "link"} that returns 
+\item{neww}{a numerical matrix for \code{W} for which the prediction are interested.}
+
+\item{type}{the type of prediction required. The default is \code{type = "link"} that returns
 prediction values on the scale of the linear predictors (eta).
 Alternatively, set \code{type = "response"} for returning predictions on the scale of the response variable.}
 
@@ -19,9 +21,9 @@ Alternatively, set \code{type = "response"} for returning predictions on the sca
 }
 \value{
 There are two types of the output of \kbd{predict.tsglm} function.
-By setting \code{type = "link"}, it returns the values of the linear predictors; 
+By setting \code{type = "link"}, it returns the values of the linear predictors;
 and by setting \code{type = "response"}, it returns the the expected values of response variable.
-For example, for a binomial model, the predictions are log-odds (probabilities on logit scale) 
+For example, for a binomial model, the predictions are log-odds (probabilities on logit scale)
 if \code{type = "link"}, and \code{type = "response"} gives the predicted probabilities of Y=1.
 }
 \description{
@@ -29,7 +31,7 @@ if \code{type = "link"}, and \code{type = "response"} gives the predicted probab
 }
 \examples{
 # Predefined function: sum of hadamard product in each array
-`\%i\%` <- function(X, B) sapply(1:dim(X)[3], function(i) sum(X[,,i]*B))
+`\%hp\%` <- function(X, B) sapply(1:dim(X)[3], function(i) sum(X[,,i]*B))
 
 # Simulation data
 n <- 500 # number of observations
@@ -41,40 +43,40 @@ B_True <- B_True / 10
 W <- matrix(rnorm(n*n_d), n, n_d); W[,1] <- 1
 X <- array(rnorm(n*n_P*n_G), dim=c(n_P, n_G, n))
 ## Regression
-y_R<- as.vector(W\%*\%beta_True + X\%i\%B_True + rnorm(n))
+y_R<- as.vector(W\%*\%beta_True + X\%hp\%B_True + rnorm(n))
 DATA_R <- list(y = y_R, X = X, W = W)
 ## Binomial
-p_B <- exp(W\%*\%beta_True + X\%i\%B_True); p_B <- p_B/(1+p_B)
+p_B <- exp(W\%*\%beta_True + X\%hp\%B_True); p_B <- p_B/(1+p_B)
 y_B <- rbinom(n, 1, p_B)
 DATA_B <- list(y = y_B, W = W, X = X)
 ## Poisson
-p_P <- exp(W\%*\%beta_True + X\%i\%B_True)
+p_P <- exp(W\%*\%beta_True + X\%hp\%B_True)
 y_P <- rpois(n, p_P)
 y_P[which(y_P > 170)] <- 170 # If y_P > 170, factorial(y_P) == inf.
 DATA_P <- list(y = y_P, W = W, X = X)
 
 # Execution
 ## Regression
-result_R <- TRtest(y = DATA_R$y, X = DATA_R$X, W=NULL, n_R = 1, family = "gaussian",
+result_R <- tensorReg2D(y = DATA_R$y, X = DATA_R$X, W=NULL, n_R = 1, family = "gaussian",
 opt = 1, max_ite = 100, tol = 10^(-7) )
 ## Prediction
 head(predict(result_R, DATA_R$X))
 
 ## Binomial
-result_B <- TRtest(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
+result_B <- tensorReg2D(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1, family = "binomial",
 opt = 1, max_ite = 100, tol = 10^(-7) )
 ## Prediction
 head(predict(result_B, DATA_B$X))
 
 ## Poisson
-result_P <- TRtest(y = DATA_P$y, X = DATA_P$X, W=NULL, n_R = 1, family = "poisson",
+result_P <- tensorReg2D(y = DATA_P$y, X = DATA_P$X, W=NULL, n_R = 1, family = "poisson",
 opt = 1, max_ite = 100, tol = 10^(-7) )
 ## Prediction
 head(predict(result_P, DATA_P$X))
 
 }
 \seealso{
-\code{\link{TRtest}, \link{summary.tsglm}}
+\code{\link{tensorReg2D}, \link{summary.tsglm}}
 }
 \author{
 Ping-Yang Chen

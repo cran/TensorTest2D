@@ -18,7 +18,7 @@ Currently, this package includes generalized linear models with \kbd{identity li
 For a complete list of functions, use \kbd{help(package = TensorTest2D)}.
 }
 \author{
-Sheng-Mao Chang \email{smchang@mail.ncku.edu.tw}
+Sheng-Mao Chang \email{smchang110@gm.ntpu.edu.tw}
 
 Wenbin Lu \email{wlu4@ncsu.edu}
 

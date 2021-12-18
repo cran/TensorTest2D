@@ -16,12 +16,12 @@
 #' @docType package
 #'
 #' @author
-#' Sheng-Mao Chang \email{smchang@mail.ncku.edu.tw}
+#' Sheng-Mao Chang \email{smchang110@gm.ntpu.edu.tw}
 #'
 #' Wenbin Lu \email{wlu4@ncsu.edu}
 #'
 #' Jung-Ying Tzeng \email{jytzeng@ncsu.edu}
-#' 
+#'
 #' Ping-Yang Chen \email{pychen.ping@gmail.com}
 #'
 #' Maintainer: Mark Chen \email{l501l501l@gmail.com}

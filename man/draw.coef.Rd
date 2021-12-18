@@ -9,7 +9,7 @@ draw.coef(
   marks,
   markstyle = c("black", "bi-dir"),
   showlabels = TRUE,
-  plot.legend = FALSE,
+  plot.legend = TRUE,
   grids = FALSE,
   ...
 )
@@ -17,19 +17,19 @@ draw.coef(
 \arguments{
 \item{img}{a matrix of image data.}
 
-\item{marks}{a matrix of the same size as \code{img}. 
+\item{marks}{a matrix of the same size as \code{img}.
 On the image plot, the pixels are marked if the corresponding cells in \code{marks} are non-zero.
 The user can specify the style of the marks through \code{markstyle}.}
 
-\item{markstyle}{string. The style of pixels' marks. If \code{markstyle = 'black'}, the rectangles 
-are marked by black edges for non-zero cells in \code{marks}. 
-If \code{markstyle = 'bi-dir'}, "red" rectangles are marked on the pixels in which the cells in \code{marks} are positive, 
+\item{markstyle}{string. The style of pixels' marks. If \code{markstyle = 'black'}, the rectangles
+are marked by black edges for non-zero cells in \code{marks}.
+If \code{markstyle = 'bi-dir'}, "red" rectangles are marked on the pixels in which the cells in \code{marks} are positive,
 and, "blue" rectangles are marked on the pixels in which the cells in \code{marks} are negative.}
 
-\item{showlabels}{boolean. For \code{showlabels = TRUE}, if \code{dimnames(img)} exists, the row and column names are 
+\item{showlabels}{boolean. For \code{showlabels = TRUE}, if \code{dimnames(img)} exists, the row and column names are
 shown on the sides of the image plot; otherwise, the row and column indices are shown.}
 
-\item{plot.legend}{boolean. Set \code{plot.legend = TRUE} if the colorbar legend is needed. The dafault is \code{FALSE}.}
+\item{plot.legend}{boolean. Set \code{plot.legend = TRUE} if the colorbar legend is needed. The default is \code{TRUE}.}
 
 \item{grids}{boolean. If \code{grids = TRUE}, grid lines are added for the image plot.}
 
@@ -39,7 +39,7 @@ shown on the sides of the image plot; otherwise, the row and column indices are 
 Marking Specific Pixels on the Given Image Plot
 }
 \examples{
-# 
+#
 
 }
 \seealso{

@@ -7,35 +7,38 @@
 \method{plot}{tsglm}(
   x,
   method = p.adjust.methods,
-  alpha = 0.05,
+  alpha = NULL,
   type = c("coef", "tval"),
   background = NULL,
   showlabels = TRUE,
-  plot.legend = FALSE,
+  plot.legend = TRUE,
   ...
 )
 }
 \arguments{
 \item{x}{an object of class \kbd{"tsglm"}.}
 
-\item{method}{p-value correction method. See \code{\link[stats]{p.adjust}}.}
+\item{method}{p-value correction method. See \code{\link[stats]{p.adjust}}.
+Its default value is \code{"none"}.}
 
-\item{alpha}{double. The value of significance level. Its default value is 0.05.}
+\item{alpha}{double. The value of significance level.
+Its default value is \code{NULL}. If specify real-valued \code{alpha}, for example 0.05,
+the image plot marks the pixels with p-values smaller than \code{alpha}.}
 
 \item{type}{string. The type of values shown on the image pixels when \code{background = NULL}.
 Set \code{type = 'coef'} for showing the values of estimated coefficients of the \(B\) matrix.
 Set \code{type = 'tval'} for showing the t-statistics of the coefficients of the \(B\) matrix.
-If \code{background} is not \code{NULL}, the plot will neglect the choice for 
+If \code{background} is not \code{NULL}, the plot will neglect the choice for
 \code{type} and show the background image as per user's interest.}
 
-\item{background}{an image data that used as the background of the effectiveness markers. 
-If \code{background = NULL}, the background color shows the effect size of 
+\item{background}{an image data that used as the background of the effectiveness markers.
+If \code{background = NULL}, the background color shows the effect size of
 the each pixel according to the setting in \code{type}.}
 
-\item{showlabels}{boolean. For \code{showlabels = TRUE}, if the row and column names of the image exist, the row and column names are 
+\item{showlabels}{boolean. For \code{showlabels = TRUE}, if the row and column names of the image exist, the row and column names are
 shown on the sides of the image plot; otherwise, the row and column indices are shown.}
 
-\item{plot.legend}{boolean. Set \code{plot.legend = TRUE} if the colorbar legend is needed. The dafault is \code{FALSE}.}
+\item{plot.legend}{boolean. Set \code{plot.legend = TRUE} if the colorbar legend is needed. The default is \code{TRUE}.}
 
 \item{...}{further arguments passed to the \code{\link[graphics]{image}} function.}
 }
@@ -43,9 +46,6 @@ shown on the sides of the image plot; otherwise, the row and column indices are 
 \kbd{plot} method for self-defined class \kbd{"tsglm"}.
 }
 \examples{
-# Predefined function: sum of hadamard product in each array
-`\%i\%` <- function(X, B) sapply(1:dim(X)[3], function(i) sum(X[,,i]*B))
-
 # Simulation data
 n <- 500 # number of observations
 n_P <- 3; n_G <- 16 # dimension of 3-D tensor variables.
@@ -57,12 +57,12 @@ W <- matrix(rnorm(n*n_d), n, n_d); W[,1] <- 1
 X <- array(rnorm(n*n_P*n_G), dim=c(n_P, n_G, n))
 
 # Binomial Responses
-p_B <- exp(W\%*\%beta_True + X\%i\%B_True); p_B <- p_B/(1+p_B)
+p_B <- exp(W\%*\%beta_True + X\%hp\%B_True); p_B <- p_B/(1+p_B)
 y_B <- rbinom(n, 1, p_B)
 DATA_B <- list(y = y_B, W = W, X = X)
 
 # Binomial Model
-result_B <- TRtest(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1,
+result_B <- tensorReg2D(y = DATA_B$y, X = DATA_B$X, W=NULL, n_R = 1,
 family = "binomial", opt = 1, max_ite = 100, tol = 10^(-7) )
 
 # Plot the effect size of the pixels
@@ -77,16 +77,16 @@ m0 <- m1 <- matrix(0, dim(DATA_B$X)[1], dim(DATA_B$X)[2])
 for (i in 1:dim(x0)[3]) m0 <- m0 + x0[,,i]/dim(x0)[3]
 for (i in 1:dim(x1)[3]) m1 <- m1 + x1[,,i]/dim(x1)[3]
 par(mfrow = c(1, 2), mar = c(2, 2, 2, 2))
-plot(result_B, method = "fdr", alpha = 0.05, 
+plot(result_B, method = "fdr", alpha = 0.05,
 background = m0, col = gray(seq(0, 1, 0.05)))
 title("Category 0")
-plot(result_B, method = "fdr", alpha = 0.05, 
-background = m1, col = gray(seq(0, 1, 0.05)))  
+plot(result_B, method = "fdr", alpha = 0.05,
+background = m1, col = gray(seq(0, 1, 0.05)))
 title("Category 1")
 
 }
 \seealso{
-\code{\link{TRtest}, \link{draw.coef}}
+\code{\link{tensorReg2D}, \link{draw.coef}}
 }
 \author{
 Ping-Yang Chen
