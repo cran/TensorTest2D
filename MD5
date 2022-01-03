@@ -1,4 +1,4 @@
-55696ec119abb293e4a8b8f4afe07903 *DESCRIPTION
+934ae8340d31b0a15f7bdfe1b9668e89 *DESCRIPTION
 ed98f07e4844d3495ae8895540c4ae4f *NAMESPACE
 ac35db3370807ab018958ac2c7e14bd5 *R/TensorTest2D.R
 45e9b4a3ccbe57cca916d490df4453c1 *R/mnist_mp2c2-data.R
@@ -26,3 +26,5 @@ ff0c51a87095f8edc44a52fe2fdacb14 *man/getGLMCoef.Rd
 5176fb15a4ead785e5ab19addfc4870e *man/predict.tsglm.Rd
 2857922bfddbb21b352df5ec3af27183 *man/summary.tsglm.Rd
 2e60b68299dd158528714520e19e846f *man/tensorReg2D.Rd
+38668ca240974766adc377a581ae09bc *tests/testthat.R
+5dfb6787ec56eccb765869412a7eb1d8 *tests/testthat/test-TensorTest2D.R

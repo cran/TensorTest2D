@@ -1,7 +1,7 @@
 Package: TensorTest2D
 Type: Package
 Title: Fitting Second-Order Tensor Data
-Version: 1.1.0
+Version: 1.1.1
 Depends: R (>= 3.5.0)
 Imports: utils, stats, grDevices, graphics
 Suggests: abind, glmnet, testthat, knitr, rmarkdown
@@ -28,6 +28,6 @@ Author: Mark Chen [aut, cre],
 URL: https://github.com/yuting1214/TensorTest2D
 BugReports: https://github.com/yuting1214/TensorTest2D/issues
 Maintainer: Mark Chen <l501l501l@gmail.com>
-Packaged: 2021-12-18 01:34:57 UTC; l501l
+Packaged: 2022-01-03 19:10:09 UTC; l501l
 Repository: CRAN
-Date/Publication: 2021-12-18 10:40:08 UTC
+Date/Publication: 2022-01-03 19:20:01 UTC
