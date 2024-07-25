@@ -27,6 +27,6 @@
 #' Maintainer: Mark Chen \email{l501l501l@gmail.com}
 #'
 #' @name TensorTest2D
-#' @aliases TensorTest2D
+#' @aliases TensorTest2D-package
 #'
 NULL

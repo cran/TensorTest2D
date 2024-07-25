@@ -3,6 +3,7 @@
 \docType{package}
 \name{TensorTest2D}
 \alias{TensorTest2D}
+\alias{TensorTest2D-package}
 \title{The TensorTest2D Package}
 \description{
 \kbd{TensorTest2D} is a tool used to fit second-order tensor type data.
